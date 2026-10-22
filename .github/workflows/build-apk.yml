@@ -1,30 +1,37 @@
-name: Build Paydar Samp APK
+name: Build Paydar Samp Android Client
+
 on:
   workflow_dispatch:
-  push:
-    branches: [ main, master ]
+
 permissions:
   contents: read
-  actions: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
+          cache: gradle
+
+      - name: Prepare Gradle wrapper
+        run: chmod +x ./gradlew
+
       - name: Build debug APK
-        run: gradle --no-daemon assembleDebug
-      - name: Upload APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: PaydarSamp-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: paydar-samp-debug-apk
+          path: '**/build/outputs/apk/**/*.apk'
+          if-no-files-found: warn
+          retention-days: 7
